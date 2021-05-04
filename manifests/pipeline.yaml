@@ -1,0 +1,16 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: echo-pipeline
+spec:
+  description: A filter pipeline.
+  params:
+    - name: val
+      type: string
+  tasks:
+    - name: task
+      params:
+        - name: val
+          value: $(params.val)
+      taskRef:
+        name: echo-val-task

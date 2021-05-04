@@ -1,0 +1,94 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-resource
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /cel-trigger
+            backend:
+              serviceName: el-cel-el-listener
+              servicePort: 8080
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: cel-el-listener
+spec:
+  serviceAccountName: cel-tekton-triggers
+  triggers:
+    - triggerRef: manifests-trigger
+    - triggerRef: another-trigger
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: manifests-trigger
+spec:
+  interceptors:
+    - webhook:
+        objectRef:
+          kind: Service
+          name: interceptor
+          apiVersion: v1
+          namespace: default
+    - cel:
+        filter: body.extensions.filesChanged.exists(i, i.startsWith('manifests/'))
+        overlays:
+          - key: echo
+            expression: '"manifests-changed"'
+  bindings:
+    - name: val
+      value: $(extensions.echo)
+  template:
+    ref: cel-pipeline-template
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: another-trigger
+spec:
+  interceptors:
+    - webhook:
+        objectRef:
+          kind: Service
+          name: interceptor
+          apiVersion: v1
+          namespace: default
+    - cel:
+        filter: body.extensions.filesChanged.exists(i, i.startsWith('another/'))
+        overlays:
+          - key: echo
+            expression: '"another-changed"'
+  bindings:
+    - name: val
+      value: $(extensions.echo)
+  template:
+    ref: cel-pipeline-template
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: cel-pipeline-template
+spec:
+  params:
+    - name: val
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: cel-pipeline-run-
+        labels:
+          application: $(tt.params.val)
+      spec:
+        pipelineRef:
+          name: echo-pipeline
+        params:
+          - name: val
+            value: $(tt.params.val)
+
+

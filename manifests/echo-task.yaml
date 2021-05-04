@@ -1,0 +1,16 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: echo-val-task
+spec:
+  params:
+    - name: val
+      type: string
+  steps:
+    - name: echo
+      image: alpine
+      script: |
+        echo $VAL
+      env:
+        - name: VAL
+          value: $(params.val)
