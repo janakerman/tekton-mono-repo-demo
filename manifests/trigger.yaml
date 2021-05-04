@@ -9,25 +9,25 @@ spec:
   rules:
     - http:
         paths:
-          - path: /cel-trigger
+          - path: /mono-trigger
             backend:
-              serviceName: el-cel-el-listener
+              serviceName: el-mono-listener
               servicePort: 8080
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: cel-el-listener
+  name: mono-listener
 spec:
   serviceAccountName: cel-tekton-triggers
   triggers:
-    - triggerRef: manifests-trigger
-    - triggerRef: another-trigger
+    - triggerRef: service-a-trigger
+    - triggerRef: service-b-trigger
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: Trigger
 metadata:
-  name: manifests-trigger
+  name: service-a-trigger
 spec:
   interceptors:
     - webhook:
@@ -37,20 +37,24 @@ spec:
           apiVersion: v1
           namespace: default
     - cel:
-        filter: body.extensions.filesChanged.exists(i, i.startsWith('manifests/'))
+        filter: body.extensions.filesChanged.exists(i, i.startsWith('service-a/'))
         overlays:
           - key: echo
-            expression: '"manifests-changed"'
+            expression: '"service a changed"'
   bindings:
     - name: val
       value: $(extensions.echo)
+    - name: service
+      value: service-a
+    - name: pipeline-name
+      value: service-a-pipeline
   template:
-    ref: cel-pipeline-template
+    ref: mono-trigger-template
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: Trigger
 metadata:
-  name: another-trigger
+  name: service-b-trigger
 spec:
   interceptors:
     - webhook:
@@ -60,35 +64,41 @@ spec:
           apiVersion: v1
           namespace: default
     - cel:
-        filter: body.extensions.filesChanged.exists(i, i.startsWith('another/'))
+        filter: body.extensions.filesChanged.exists(i, i.startsWith('service-b/'))
         overlays:
           - key: echo
-            expression: '"another-changed"'
+            expression: '"service b changed"'
   bindings:
     - name: val
       value: $(extensions.echo)
+    - name: service
+      value: service-b
+    - name: pipeline-name
+      value: service-b-pipeline
   template:
-    ref: cel-pipeline-template
+    ref: mono-trigger-template
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: cel-pipeline-template
+  name: mono-trigger-template
 spec:
   params:
     - name: val
+    - name: service
+    - name: pipeline-name
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
       metadata:
-        generateName: cel-pipeline-run-
+        generateName: mono-pipeline-run-
         labels:
-          application: $(tt.params.val)
+          service: $(tt.params.service)
       spec:
         pipelineRef:
-          name: echo-pipeline
+          name: $(tt.pipeline-name)
         params:
           - name: val
             value: $(tt.params.val)
-
-
+          - name: service
+            value: $(tt.params.service)
