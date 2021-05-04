@@ -35,3 +35,20 @@ Apply the manifests:
 ```
 kubectl apply -f manifests/
 ```
+
+## Hit the webhooks
+
+Webhook for a commit with the sub-folder `service-a` changing:
+```
+curl localhost/mono-trigger --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"9f2789c5\",\"after\":\"b30c29fd\"}"
+```
+
+Webhook for a commit with the sub-folder `service-b` changing:
+```
+curl localhost/mono-trigger --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"b30c29fd\",\"after\":\"c66f7cc1\"}"
+```
+
+Webhook for a commit where both sub-folders have changed:
+```
+curl localhost/mono-trigger --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"c66f7cc1\",\"after\":\"3422de7b\"}"
+```
