@@ -1,3 +1,4 @@
+---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -9,15 +10,15 @@ spec:
   rules:
     - http:
         paths:
-          - path: /mono-trigger
+          - path: /my-repo-trigger
             backend:
-              serviceName: el-mono-listener
+              serviceName: el-my-repo
               servicePort: 8080
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: mono-listener
+  name: my-repo
 spec:
   serviceAccountName: cel-tekton-triggers
   triggers:
@@ -38,18 +39,13 @@ spec:
           namespace: default
     - cel:
         filter: body.extensions.filesChanged.exists(i, i.startsWith('service-a/'))
-        overlays:
-          - key: echo
-            expression: '"service a changed"'
   bindings:
-    - name: val
-      value: $(extensions.echo)
     - name: service
       value: service-a
     - name: pipeline-name
       value: service-a-pipeline
   template:
-    ref: mono-trigger-template
+    ref: my-repo-trigger-template
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: Trigger
@@ -65,40 +61,32 @@ spec:
           namespace: default
     - cel:
         filter: body.extensions.filesChanged.exists(i, i.startsWith('service-b/'))
-        overlays:
-          - key: echo
-            expression: '"service b changed"'
   bindings:
-    - name: val
-      value: $(extensions.echo)
     - name: service
       value: service-b
     - name: pipeline-name
       value: service-b-pipeline
   template:
-    ref: mono-trigger-template
+    ref: my-repo-trigger-template
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: mono-trigger-template
+  name: my-repo-trigger-template
 spec:
   params:
-    - name: val
     - name: service
     - name: pipeline-name
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
       metadata:
-        generateName: mono-pipeline-run-
+        generateName: $(tt.params.service)-pipeline-run-
         labels:
           service: $(tt.params.service)
       spec:
         pipelineRef:
-          name: $(tt.pipeline-name)
+          name: $(tt.params.pipeline-name)
         params:
-          - name: val
-            value: $(tt.params.val)
           - name: service
             value: $(tt.params.service)
