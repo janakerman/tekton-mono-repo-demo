@@ -1,0 +1,10 @@
+apiVersion: v2
+name: tekton-multi-pipeline-repo
+version: 1.0.0
+description: |
+  A set of Tekton trigger resources to configure multiple pipelines within a single Github repository.
+type: application
+keywords:
+  - A list of keywords about this project (optional)
+sources:
+  - https://github.com/janakerman/tekton-promotion-demo/helm

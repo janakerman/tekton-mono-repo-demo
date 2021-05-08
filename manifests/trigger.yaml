@@ -38,7 +38,12 @@ spec:
           namespace: default
     - cel:
         filter: body.extensions.filesChanged.exists(i, i.startsWith('service-a/'))
+        overlays:
+          - key: echo
+            expression: '"service a changed"'
   bindings:
+    - name: val
+      value: $(extensions.echo)
     - name: service
       value: service-a
     - name: pipeline-name
@@ -60,7 +65,12 @@ spec:
           namespace: default
     - cel:
         filter: body.extensions.filesChanged.exists(i, i.startsWith('service-b/'))
+        overlays:
+          - key: echo
+            expression: '"service b changed"'
   bindings:
+    - name: val
+      value: $(extensions.echo)
     - name: service
       value: service-b
     - name: pipeline-name
@@ -74,6 +84,7 @@ metadata:
   name: mono-trigger-template
 spec:
   params:
+    - name: val
     - name: service
     - name: pipeline-name
   resourcetemplates:
@@ -85,7 +96,9 @@ spec:
           service: $(tt.params.service)
       spec:
         pipelineRef:
-          name: $(tt.params.pipeline-name)
+          name: $(tt.pipeline-name)
         params:
+          - name: val
+            value: $(tt.params.val)
           - name: service
             value: $(tt.params.service)

@@ -31,24 +31,38 @@ docker build --tag localhost:5000/interceptor interceptor
 docker push localhost:5000/interceptor
 ```
 
-Apply the manifests:
+Apply the pipeline and other manifests:
 ```
-kubectl apply -f manifests/
+kubectl apply -f manifests/echo-task.yaml\
+  -f manifests/interceptor.yaml\
+  -f manifests/rbac.yaml\
+  -f manifests/service-a-pipeline.yaml\
+  -f manifests/service-b-pipeline.yaml
+```
+
+Set up the triggers either by applying the example manifests:
+```
+kubectl apply -f manifests/trigger.yaml
+```
+
+Or using the example Helm chart:
+```
+kubectl apply -f <(helm template test helm/tekton-multi-pipeline-repo --values example-values.yaml)
 ```
 
 ## Hit the webhooks
 
 Webhook for a commit with the sub-folder `service-a` changing:
 ```
-curl localhost/mono-trigger --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"9f2789c5\",\"after\":\"b30c29fd\"}"
+curl localhost/my-repo-trigger --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"9f2789c5\",\"after\":\"b30c29fd\"}"
 ```
 
 Webhook for a commit with the sub-folder `service-b` changing:
 ```
-curl localhost/mono-trigger --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"b30c29fd\",\"after\":\"c66f7cc1\"}"
+curl localhost/my-repo-trigger --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"b30c29fd\",\"after\":\"c66f7cc1\"}"
 ```
 
 Webhook for a commit where both sub-folders have changed:
 ```
-curl localhost/mono-trigger --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"c66f7cc1\",\"after\":\"3422de7b\"}"
+curl localhost/my-repo-triggerr --data "{\"repository\":{\"full_name\":\"janakerman/tekton-mono-repo-demo\"},\"before\":\"c66f7cc1\",\"after\":\"3422de7b\"}"
 ```

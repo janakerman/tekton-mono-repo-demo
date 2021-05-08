@@ -1,0 +1,24 @@
+{{- range $key, $value := .Values.projects }}
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: {{ required "The project requires a name." .name }}-trigger
+spec:
+  interceptors:
+    - webhook:
+        objectRef:
+          kind: Service
+          name: interceptor
+          apiVersion: v1
+          namespace: default
+    - cel:
+        filter: body.extensions.filesChanged.exists(i, i.startsWith('{{ .path }}'))
+  bindings:
+    - name: service
+      value: {{ .name }}
+    - name: pipeline-name
+      value: {{ .pipeline }}
+  template:
+    ref: {{ required "Repository name is required" $.Values.repositoryName }}-trigger-template
+---
+{{- end }}

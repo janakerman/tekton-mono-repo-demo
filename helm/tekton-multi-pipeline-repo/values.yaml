@@ -1,0 +1,19 @@
+# The name of the repository this trigger is created for. Used to name resources.
+repositoryName:
+
+# An Ingress is created for this endpoint. e.g /my-repo-trigger
+webhookEndpoint:
+
+# The name of the service account that the event listener runs under.
+serviceAccount:
+
+# A list of the projects within the repository mapped to the pipeline they should trigger.
+#
+# projects:
+#   - name: project-a
+#     path: project-a/
+#     pipeline: project-a-pipeline
+#   - name: project-b
+#     path: project-b/
+#     pipeline: project-b-pipeline
+projects:

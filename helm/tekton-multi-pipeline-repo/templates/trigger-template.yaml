@@ -1,0 +1,21 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: {{ .Values.repositoryName }}-trigger-template
+spec:
+  params:
+    - name: service
+    - name: pipeline-name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: $(tt.params.service)-pipeline-run-
+        labels:
+          service: $(tt.params.service)
+      spec:
+        pipelineRef:
+          name: $(tt.params.pipeline-name)
+        params:
+          - name: service
+            value: $(tt.params.service)

@@ -1,0 +1,9 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: {{ required "Repository name is required" .Values.repositoryName }}
+spec:
+  serviceAccountName: {{ .Values.serviceAccount }}
+  triggers:
+  {{- range $key, $value := .Values.projects }}
+    - triggerRef: {{ required "Project must have a name" .name }}-trigger{{ end }}

@@ -1,0 +1,10 @@
+repositoryName: my-repo
+webhookEndpoint: /my-repo-trigger
+serviceAccount: cel-tekton-triggers
+projects:
+  - name: service-a
+    path: service-a/
+    pipeline: service-a-pipeline
+  - name: service-b
+    path: service-b/
+    pipeline: service-b-pipeline
